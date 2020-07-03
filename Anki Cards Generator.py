@@ -6,6 +6,7 @@ from datetime import datetime
 import time
 import moviepy
 from gtts import gTTS
+from pathlib import Path
 
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
@@ -14,23 +15,29 @@ def srt_time_to_sec(time_srt):
   td = datetime.strptime(time_srt,'%H:%M:%S,%f') - datetime(1900,1,1)
   return td.total_seconds()
 
+api_key = input("Paste your API Key here:  ")
+video_name = Path(input("copy paste the name of the video to use (should be in the same folder as this script):  "))
+video_id = input("The video ID:  ")
+
+# at = airtable.Airtable('app3qY4PvmhbRYcfj', api_key)
+
+# key_sentences = at.get('Key Sentences')
+key_sentences = Airtable('app3qY4PvmhbRYcfj', 'Key Sentences', api_key = api_key)
+# df_ks = pd.DataFrame([record['fields'] for record in key_sentences.get_all(sort=[('Line ID','asc')])])
+
+# video = df_ks.loc[df_ks['Video ID'] == str(video_id)]
 
 
+# key_phrases = at.get('Key phrases')
+key_phrases = Airtable('app3qY4PvmhbRYcfj', 'Key phrases', api_key = api_key)
+# df_kp = pd.DataFrame([record['fields'] for record in key_phrases.get_all(sort=[('Line ID','asc')])])
+# print(df_kp)
 
-key_sentences = Airtable( 'app3qY4PvmhbRYcfj', 'Key Sentences', api_key = '<API KEY HERE>')
-df_ks = pd.DataFrame([record['fields'] for record in key_sentences.get_all(sort=[('Line ID','asc')])])
+# key_words = at.get('Key words')
 
-video = df_ks.loc[df_ks['Video ID'] == '6']
-
-
-
-key_phrases = Airtable('app3qY4PvmhbRYcfj', 'Key phrases', api_key = '<API KEY HERE>')
-df_kp = pd.DataFrame([record['fields'] for record in key_phrases.get_all(sort=[('Line ID','asc')])])
-print(df_kp)
-
-key_words = Airtable('app3qY4PvmhbRYcfj', 'Key words', api_key = '<API KEY HERE>')
-df_kw = pd.DataFrame([record['fields'] for record in key_words.get_all(sort=[('Line ID','asc')])])
-print(df_kw)
+key_words = Airtable('app3qY4PvmhbRYcfj', 'Key words', api_key = api_key)
+# df_kw = pd.DataFrame([record['fields'] for record in key_words.get_all(sort=[('Line ID','asc')])])
+# print(df_kw)
 
 
 # Split the video into short videos
@@ -174,7 +181,7 @@ def generate_anki_deck(selected_video,required_video_file):
     cut_name = 'Video_{}_Line_{}.mp4'.format(sentences[i]['fields']['Video ID'],sentences[i]['fields']['Line ID'])
     tag_cut_name = "[sound:{}]".format(cut_name)
     # generate the video file
-    ffmpeg_extract_subclip(required_video_file, starttime, endtime, targetname=cut_name)
+    ffmpeg_extract_subclip(required_video_file, starttime, endtime, targetname=cut_name) # -c:a aac
     sentence_note = genanki.Note(
     model=video_recognition,
     fields=[sentences[i]['fields']['Video ID'],
@@ -193,4 +200,4 @@ def generate_anki_deck(selected_video,required_video_file):
 #video_deck.add_note(new_note)
   package.write_to_file('video{}_deck.apkg'.format(str(selected_video)))
 
-generate_anki_deck(6,'video.mp4')
+generate_anki_deck(video_id,video_name)
